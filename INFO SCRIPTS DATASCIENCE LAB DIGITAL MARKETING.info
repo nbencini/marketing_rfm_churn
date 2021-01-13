@@ -1,0 +1,23 @@
+GUIDELINES scripts
+
+-	each step corresponds to a separate script:
+	use a prefix to handle the sequentiality of the script:
+		A00_main.R
+		B01_ingestion.R
+		C01_preparation_xyz.R
+		...
+
+-	in A00_main.R scripts:
+	import all the variables (add all the libraries used in the following scripts)
+	map all the script sequence in PIPELINE_scripts
+	
+	declare the path of the directory containing the data in your local environment (data_dir)
+		NB all the data files must be in the same directory
+		
+	declare the path of the working directory in your local environment (working_dir)
+	
+	use the 'EXECUTION FULL PIPELINE' script to run all the scripts in sequence
+	
+-	in following scripts there are parts left to the students
+	these are referred as '#### ???? TO DO <...> ???? ####'
+	
