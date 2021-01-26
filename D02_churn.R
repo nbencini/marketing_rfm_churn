@@ -4,14 +4,14 @@ library(rpart.plot)
 library(MLmetrics)
 library(randomForest)
 library(funModeling)
-
+library(e1071)
 
 scontrini <- df_7_tic_clean_final %>%
   filter(DIREZIONE == 1,
          TIC_DATE < as.Date("01/01/2019", format = "%d/%m/%Y"),
          TIC_DATE >= as.Date("01/10/2018", format = "%d/%m/%Y"))
 
-# holdout period is 60 days
+# holdout period is 2 months (~60d, 1/1 to 28/2)
 holdout <- df_7_tic_clean_final %>%
   filter(DIREZIONE == 1,
          TIC_DATE < as.Date("01/03/2019", format = "%d/%m/%Y"),
@@ -33,7 +33,7 @@ churn_frequency <- scontrini %>%
 
 churn_monetary <- scontrini %>%
   group_by(ID_CLI) %>%
-  summarize(IMPORTO_LORDO = sum(IMPORTO_LORDO)) %>%
+  summarise(IMPORTO_LORDO = sum(IMPORTO_LORDO)) %>%
   ungroup() %>%
   as.data.frame()
 
@@ -64,81 +64,105 @@ train <- churn[train_index,]
 test <- churn[-train_index,]
 
 
-
-
-
+# Decision Tree
 tree <- rpart(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
               data = train)
-rpart.plot(tree, extra = "auto")
 summary(tree)
-
-
-tree_rf <- randomForest(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
-                        data = train, ntree = 100)
-print(tree_rf)
-
-
-logistic <- train(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
-                  data = train,
-                  method = "glm")
-summary(logistic)
-
 
 tree_pred <- predict(tree, test[, -5], type = "class")
 p1 <- unlist(tree_pred)
 confusionMatrix(p1, test$CHURN)
 
+precision(p1, test$CHURN, relevant="1")
+recall(p1, test$CHURN, relevant="1")
+F1_Score(p1, test$CHURN, positive = "1")
+
+
+# Random Forest
+tree_rf <- randomForest(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+                        data = train, ntree = 100)
+print(tree_rf)
+
 tree_rf_pred <- predict(tree_rf, test[,-5], type = "class")
 confusionMatrix(tree_rf_pred, test$CHURN)
+
+precision(tree_rf_pred, test$CHURN, relevant="1")
+recall(tree_rf_pred, test$CHURN, relevant="1")
+F1_Score(tree_rf_pred, test$CHURN, positive = "1")
+
+
+# Logistic Regression
+logistic <- train(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+                  data = train,
+                  method = "glm")
+summary(logistic)
 
 logistic_pred <- predict(logistic, test[, -5], type = "raw")
 confusionMatrix(logistic_pred, test$CHURN)
 
+recall(logistic_pred, test$CHURN, relevant="1")
+precision(logistic_pred, test$CHURN, relevant="1")
+F1_Score(logistic_pred, test$CHURN, positive="1")
+
+# Support Vector Machine
+svmfit <- svm(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+             data = train,
+             kernel = "linear")
+print(svmfit)
+
+svm_pred <- predict(svmfit, test[, -5])
+confusionMatrix(svm_pred, test$CHURN)
+
+recall(svm_pred, test$CHURN, relevant="1")
+precision(svm_pred, test$CHURN, relevant="1")
+F1_Score(svm_pred, test$CHURN, positive="1")
 
 
+# Naïve Bayes
+nbfit <- naiveBayes(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+                    data = train)
+nbfit
 
-accuracy <- as.data.frame(t(cbind(confusionMatrix(logistic_pred, test$CHURN)$overall[1],
-                                  confusionMatrix(tree_rf_pred, test$CHURN)$overall[1],
-                                  confusionMatrix(tree_pred, test$CHURN)$overall[1])))
+nb_pred <- predict(nbfit, test[, -5])
+confusionMatrix(nb_pred, test$CHURN)
 
-accuracy <- as.data.frame(cbind(c("Logistic Regression", "Random Forest", "Decision Tree"), accuracy))
+recall(nb_pred, test$CHURN, relevant="1")
+precision(nb_pred, test$CHURN, relevant="1")
+F1_Score(nb_pred, test$CHURN, positive="1")
 
-colnames(accuracy) <- c("Models", "Accuracy")
 
-ggplot(data = accuracy,
-       aes(x = Models,
-           y = Accuracy,
-           fill = Models)) +
+scores <- as.data.frame(rbind(
+  cbind(recall(tree_pred, test$CHURN, relevant="1"), precision(tree_pred, test$CHURN, relevant="1"), F1_Score(tree_pred, test$CHURN, positive="1")),
+  cbind(recall(tree_rf_pred, test$CHURN, relevant="1"), precision(tree_rf_pred, test$CHURN, relevant="1"), F1_Score(tree_rf_pred, test$CHURN, positive="1")),
+  cbind(recall(logistic_pred, test$CHURN, relevant="1"), precision(logistic_pred, test$CHURN, relevant="1"), F1_Score(logistic_pred, test$CHURN, positive="1")),
+  cbind(recall(svm_pred, test$CHURN, relevant="1"), precision(svm_pred, test$CHURN, relevant="1"), F1_Score(svm_pred, test$CHURN, positive="1")),
+  cbind(recall(nb_pred, test$CHURN, relevant="1"), precision(nb_pred, test$CHURN, relevant="1"), F1_Score(nb_pred, test$CHURN, positive="1"))))
+
+
+scores <- as.data.frame(cbind(c("Decision Tree", "Random Forest", "Logistic Regression", "SVM", "Naive Bayes"), scores))
+
+colnames(scores) <- c("Model", "Recall", "Precision", "F1_Score")
+
+ggplot(data = scores, aes(x = Model, y = F1_Score)) +
   geom_bar(stat = "identity") +
-  coord_cartesian(ylim = c(0.681, 0.693)) +
+  coord_cartesian(ylim = c(0.7, 0.8)) +
   theme_minimal() +
   guides(fill = FALSE) +
-  labs(title = "Accuracy",
-       x = "Models",
-       y = " ") +
-  scale_fill_manual(values = c("#FF1053","#6C6EA0","#66C7F4","#C1CAD6")) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  
-  plot(accuracy$Accuracy)
+  theme(plot.title = element_text(hjust = 0.5))
 
+ggplot(data = scores, aes(x = Model, y = Precision)) +
+  geom_bar(stat = "identity") +
+  coord_cartesian(ylim = c(0.6, 0.8)) +
+  theme_minimal() +
+  guides(fill = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5))
 
-#-- Probability
-p_tree = predict(tree, test[,-5], "prob")[,1]
-p_rf = predict(tree_rf, test[,-5], "prob")[,1]
-p_log = predict(logistic, test[,-5], "prob")[,1]
-
-#-- Data Frame
-data_class = as.data.frame(cbind(p_tree, p_rf, p_log))
-data_class = cbind(data_class, test$CHURN)
-colnames(data_class) <- c("p_tree", "p_rf", "p_log", "churn")
-head(data_class)
-
-#-- Lift
-lift_tree = gain_lift(data = data_class, score = 'p_tree', target = 'churn')
-lift_rf = gain_lift(data = data_class, score = 'p_rf', target = 'churn')
-lift_log = gain_lift(data = data_class, score = 'p_log', target = 'churn')
-
-
+ggplot(data = scores, aes(x = Model, y = Recall)) +
+  geom_bar(stat = "identity") +
+  coord_cartesian(ylim = c(0.75, 1)) +
+  theme_minimal() +
+  guides(fill = FALSE) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
