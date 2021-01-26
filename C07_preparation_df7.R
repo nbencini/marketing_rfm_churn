@@ -219,7 +219,7 @@ plot_df7_dist_importo
 
 ## plot aggregate
 plot_df7_dist_sconto <- (
-  ggplot(data=df7_dist_importosconto %>% filter((SCONTO > -250) & (IMPORTO_LORDO < 250)), aes(color=DIREZIONE, x=SCONTO)) +
+  ggplot(data=df7_dist_importosconto %>% filter((SCONTO > -250) & (SCONTO < 250)), aes(color=DIREZIONE, x=SCONTO)) +
     geom_histogram(binwidth=10, fill="white", alpha=0.5) +
     theme_minimal()
 )
@@ -230,8 +230,8 @@ plot_df7_dist_sconto
 # EXPLORE average IMPORTO_LORDO and average SCONTO by COD_REPARTO
 df7_dist_importosconto_cod_rep <- df_7_tic_clean_final %>%
   group_by(COD_REPARTO, DIREZIONE) %>%
-  summarize(IMPORTO_LORDO = sum(IMPORTO_LORDO),
-            SCONTO = sum(SCONTO)) %>%
+  summarize(IMPORTO_LORDO = mean(IMPORTO_LORDO),
+            SCONTO = mean(SCONTO)) %>%
   ungroup() %>%
   as.data.frame()
 
@@ -261,9 +261,67 @@ df7_dist_id_articolo <- df_7_tic_clean_final %>%
 df7_dist_id_articolo
 
 # EXPLORE average IMPORTO_LORDO and average SCONTO per ID_CLI
+df7_dist_importosconto_cli <- df_7_tic_clean_final %>%
+  group_by(ID_CLI, DIREZIONE) %>%
+  summarize(IMPORTO_LORDO = mean(IMPORTO_LORDO),
+            SCONTO = mean(SCONTO)) %>%
+  ungroup() %>%
+  as.data.frame()
+
+df7_dist_importosconto_cli
+
+# IMPORTO_LORDO
+ggplot(data = df7_dist_importosconto_cli %>% filter((IMPORTO_LORDO > -1000) & (IMPORTO_LORDO < 1000)), aes(fill = DIREZIONE, x= IMPORTO_LORDO)) +
+  geom_histogram(binwidth=20) +
+  theme_minimal()
+
+#-- SCONTO
+ggplot(data = df7_dist_importosconto_cli %>% filter((SCONTO > -250) & (SCONTO < 250)), aes(fill = DIREZIONE, x = SCONTO)) +
+  geom_histogram(binwidth = 10) +
+  theme_minimal()
 
 # compute the distribution of customers by number of purchases (as described in the slides)
+df7_dist_customers_purchases <- df_7_tic_clean_final %>%
+  filter(DIREZIONE == 1) %>%
+  group_by(ID_CLI) %>%
+  summarise(NUM_PURCHASES = n_distinct(ID_SCONTRINO)) %>%
+  ungroup() %>%
+  as.data.frame() %>%
+  arrange(desc(NUM_PURCHASES))
+
+df7_dist_customers_purchases
+
+ggplot(data = df7_dist_customers_purchases, aes(x= NUM_PURCHASES)) +
+  geom_histogram(binwidth=1) +
+  theme_minimal()
+
+
+
 # compute the days for next purchase curve (as described in the slides)
+df7_days_next_purchase <- df_7_tic_clean_final %>%
+  filter(DIREZIONE == 1) %>%
+  select(ID_CLI, ID_ARTICOLO, TIC_DATE, DIREZIONE) %>%
+  arrange(ID_CLI) %>%
+  group_by(ID_CLI) %>%
+  mutate(date_diff = TIC_DATE - lag(TIC_DATE)) %>%
+  group_by(ID_CLI) %>%
+  na.omit() %>%
+  summarize(AVG_next_purchase = mean(date_diff)) %>%
+  arrange(AVG_next_purchase)
+
+lag_date_purchases <- as.data.frame(table(df7_days_next_purchase$AVG_next_purchase))
+lag_date_purchases <- lag_date_purchases[-1, ]
+lag_date_purchases$Perc <- x$Freq/sum(x$Freq)
+
+ggplot(lag_date_purchases, aes(x = as.numeric(as.character(Var1)), y = cumsum(Perc))) +
+  labs(title = "Next Purchase Curve",
+       x = "Last Purchase Date (in Days)",
+       y = "Cumulative Percent") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_vline(xintercept = 60, linetype = "dotted") +
+  geom_line(size = 1)
+
 
 #### FINAL REVIEW df_7_clean ####
 

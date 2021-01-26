@@ -79,13 +79,14 @@ tot_emailproviders
 # COMPUTE THE DISTRIBUTION for the remaining df_2_cli_fid_clean variables
 
 df_2_dist_phone <- df_2_cli_account_clean %>%
-  group_by(W_PHONE) %>% #-- Grouped By W_PHONE
-  summarize(TOT_CLIs = n_distinct(ID_CLI)) %>% #-- Number of Total Client
-  mutate(PERCENT = TOT_CLIs/sum(TOT_CLIs)) %>% #-- Percent
-  arrange(desc(PERCENT)) %>% #-- Sorted by PERCENT
+  group_by(W_PHONE) %>%
+  summarize(TOT_CLIs = n_distinct(ID_CLI)) %>%
+  mutate(PERCENT = TOT_CLIs/sum(TOT_CLIs)) %>%
+  arrange(desc(PERCENT)) %>%
   as.data.frame()
 
 df_2_dist_phone
+# 92.6% of clients have a phone number
 
 df_2_dist_account <- df_2_cli_account_clean %>%
   group_by(TYP_CLI_ACCOUNT) %>% #-- Grouped By TYP_CLI_ACCOUNT
@@ -150,11 +151,11 @@ plot_df2_dist_emailproviderclean
 # EXPLORE the remaining df_2_cli_account_clean relevant variables
 
 # TYP_JOB
-df_2_dist_job <- df_2_cli_account_clean             %>%
-  group_by(TYP_JOB)                        %>% #-- Grouped By TYP_JOB
-  summarize(TOT_CLIs = n_distinct(ID_CLI)) %>% #-- Number of Total Client
-  mutate(PERCENT = TOT_CLIs/sum(TOT_CLIs)) %>% #-- Percent
-  arrange(desc(PERCENT))                   %>% #-- Sorted by PERCENT 
+df_2_dist_job <- df_2_cli_account_clean %>%
+  group_by(TYP_JOB) %>%
+  summarize(TOT_CLIs = n_distinct(ID_CLI)) %>%
+  mutate(PERCENT = TOT_CLIs/sum(TOT_CLIs)) %>%
+  arrange(desc(PERCENT)) %>%
   as.data.frame()
 
 df_2_dist_job

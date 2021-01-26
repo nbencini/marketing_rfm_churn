@@ -124,7 +124,24 @@ plot_df1_dist_codfid
 #### ???? TO DO df_1 ???? ####
 # EXPLORE the remaining df_1_cli_fid_clean relevant variables
 
-# last_status_fid, num_fids, last_typ_cli_fid, first_dt_active
+df1_dist_statusfid <- df_1_cli_fid_clean %>%
+  group_by(LAST_STATUS_FID) %>%
+  summarize(TOT_CLIs = n_distinct(ID_CLI)) %>%
+  mutate(PERCENT = TOT_CLIs/sum(TOT_CLIs)) %>%
+  arrange(desc(PERCENT))
+
+df1_dist_statusfid
+# 99.2% of clients have LAST_STATUS_FID = 1
+
+
+df1_dist_numfid <- df_1_cli_fid_clean %>%
+  group_by(NUM_FIDs) %>%
+  summarize(TOT_CLIs = n_distinct(ID_CLI)) %>%
+  mutate(PERCENT = TOT_CLIs/sum(TOT_CLIs)) %>%
+  arrange(desc(PERCENT))
+
+df1_dist_numfid
+# 99,8% of clients have only 1 fidelity card
 
 #### FINAL REVIEW df_1_clean ####
 

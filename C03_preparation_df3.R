@@ -66,15 +66,16 @@ cons_idaddress_df2_df3
 # EXPLORE the df_3_cli_address_clean relevant variables
 
 nrow(df_3_cli_address_clean %>% distinct(CAP))
+# 4784 different CAPs
 
 nrow(df_3_cli_address_clean %>% distinct(PRV)) 
+# 110 different province
 
-# regione
 df3_dist_region <- df_3_cli_address_clean %>%
-  group_by(REGION) %>%  #-- Grouped By REGION
-  summarize(TOT_ADDRESS = n_distinct(ID_ADDRESS)) %>%  #-- Number of Total Client
-  mutate(PERCENT = TOT_ADDRESS/sum(TOT_ADDRESS)) %>%  #-- Percent
-  arrange(desc(PERCENT)) #-- Sorted by PERCENT 
+  group_by(REGION) %>%
+  summarize(TOT_ADDRESS = n_distinct(ID_ADDRESS)) %>%
+  mutate(PERCENT = TOT_ADDRESS/sum(TOT_ADDRESS)) %>%
+  arrange(desc(PERCENT))
 
 df3_dist_region
 

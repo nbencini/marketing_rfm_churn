@@ -11,6 +11,7 @@ scontrini <- df_7_tic_clean_final %>%
          TIC_DATE < as.Date("01/01/2019", format = "%d/%m/%Y"),
          TIC_DATE >= as.Date("01/10/2018", format = "%d/%m/%Y"))
 
+# holdout period is 60 days
 holdout <- df_7_tic_clean_final %>%
   filter(DIREZIONE == 1,
          TIC_DATE < as.Date("01/03/2019", format = "%d/%m/%Y"),
@@ -29,7 +30,6 @@ churn_recency$RECENCY <- difftime(as.Date("01/01/2019", format = "%d/%m/%Y"),
 churn_frequency <- scontrini %>%
   group_by(ID_CLI) %>%
   summarise(COUNT_ACQUISTI = n_distinct(ID_SCONTRINO))
-
 
 churn_monetary <- scontrini %>%
   group_by(ID_CLI) %>%

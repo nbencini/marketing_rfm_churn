@@ -46,22 +46,22 @@ cons_idcli_df1_df4
 #### ???? TO DO df_4 ???? ####
 # EXPLORE the df_4_cli_privacy_clean relevant variables
 
-df4_dist_privacy1 <- df_4_cli_privacy_clean                            %>%
-  group_by(FLAG_PRIVACY_1) %>% #-- Grouped By FLAG_PRIVACY_1
-  summarize(TOT_ID = n_distinct(ID_CLI)) %>% #-- Number of Total Client
-  mutate(PERCENT = TOT_ID/sum(TOT_ID)) %>% #-- Percent
-  arrange(desc(PERCENT)) #-- Sorted by PERCENT 
+df4_dist_privacy1 <- df_4_cli_privacy_clean %>%
+  group_by(FLAG_PRIVACY_1) %>%
+  summarize(TOT_ID = n_distinct(ID_CLI)) %>%
+  mutate(PERCENT = TOT_ID/sum(TOT_ID)) %>%
+  arrange(desc(PERCENT))
 
 ggplot(data = df4_dist_privacy1, aes(x = FLAG_PRIVACY_1, y = TOT_ID)) +
   geom_bar(stat = "identity", fill = "steelblue") +
   theme_minimal()
 
 
-df4_dist_privacy2 <- df_4_cli_privacy_clean                            %>%
-  group_by(FLAG_PRIVACY_2) %>% #-- Grouped By FLAG_PRIVACY_1
-  summarize(TOT_ID = n_distinct(ID_CLI)) %>% #-- Number of Total Client
-  mutate(PERCENT = TOT_ID/sum(TOT_ID)) %>% #-- Percent
-  arrange(desc(PERCENT)) #-- Sorted by PERCENT 
+df4_dist_privacy2 <- df_4_cli_privacy_clean %>%
+  group_by(FLAG_PRIVACY_2) %>%
+  summarize(TOT_ID = n_distinct(ID_CLI)) %>%
+  mutate(PERCENT = TOT_ID/sum(TOT_ID)) %>%
+  arrange(desc(PERCENT))
 
 df4_dist_privacy2
 
@@ -71,10 +71,10 @@ ggplot(data = df4_dist_privacy2, aes(x = FLAG_PRIVACY_2, y = TOT_ID)) +
 
 
 df4_dist_privacy_mkt <-df_4_cli_privacy_clean %>%
-  group_by(FLAG_DIRECT_MKT) %>% #-- Grouped By FLAG_PRIVACY_1
-  summarize(TOT_ID = n_distinct(ID_CLI)) %>% #-- Number of Total Client
-  mutate(PERCENT = TOT_ID/sum(TOT_ID)) %>% #-- Percent
-  arrange(desc(PERCENT)) #-- Sorted by PERCENT 
+  group_by(FLAG_DIRECT_MKT) %>%
+  summarize(TOT_ID = n_distinct(ID_CLI)) %>%
+  mutate(PERCENT = TOT_ID/sum(TOT_ID)) %>%
+  arrange(desc(PERCENT))
 
 df4_dist_privacy_mkt
 

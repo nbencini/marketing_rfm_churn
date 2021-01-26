@@ -1,10 +1,7 @@
 scontrini_2019 <- df_7_tic_clean_final %>%
   filter(TIC_DATE > as.Date("01/01/2019", format = "%d/%m/%Y"))
 
-
-
 # RECENCY
-
 recency <- scontrini_2019 %>%
   filter(DIREZIONE == 1) %>%
   group_by(ID_CLI) %>%
@@ -21,12 +18,10 @@ recency <- within(recency,
                                        labels = c("LOW", "MEDIUM", "HIGH")))
 
 recency_counts <- as.data.frame(table(recency$CLASS_RECENCY))
-
-
+recency_counts
 
 
 # FREQUENCY
-
 frequency <- scontrini_2019 %>%
   filter(DIREZIONE == 1) %>%
   group_by(ID_CLI) %>%
@@ -41,12 +36,10 @@ frequency <- within(frequency,
                                            labels = c("LOW", "MEDIUM", "HIGH")))
 
 frequency_counts <- as.data.frame(table(frequency$CLASS_FREQUENCY))
-
-
+frequency_counts
 
 
 # MONETARY
-
 monetary <- scontrini_2019 %>%
   filter(DIREZIONE == 1) %>%
   group_by(ID_CLI) %>%
@@ -61,11 +54,10 @@ monetary <- within(monetary,
                                          labels = c("LOW", "MEDIUM", "HIGH")))
 
 monetary_counts <- as.data.frame(table(monetary$CLASS_MONETARY))
-
+monetary_counts
 
 
 # RFM
-
 rfm <- merge(frequency, monetary, by = "ID_CLI")
 rfm <- merge(rfm, recency, by = "ID_CLI")
 
@@ -86,6 +78,26 @@ for(i in c(1:nrow(rfm))){
 rf_counts = rfm %>%
   count(CLASS_RECENCY, CLASS_FREQUENCY, RF)
 rf_counts
+
+ggplot(rf_counts, aes(x=CLASS_FREQUENCY, y=CLASS_RECENCY, fill=n)) + 
+  geom_tile() +
+  geom_text(aes(label = n)) +
+  scale_fill_distiller(direction=1) +
+  theme_minimal()
+
+
+rf <- as.data.frame(table(rfm$RF)) %>%
+  arrange(Freq)
+rf
+
+ggplot(data = rf, aes(x=Var1, y=Freq)) +
+  geom_bar(stat = "identity") +
+  scale_colour_brewer(palette = "Spectral") +
+  labs(title = "RF Classes Distribution", x = "RF Classes", y = "# Customers") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  guides(fill = FALSE)
+
 
 
 rfm$RFM <- NA
@@ -115,3 +127,20 @@ rfm_counts = rfm %>%
   count(RF, CLASS_MONETARY, RFM)
 
 rfm_counts
+
+ggplot(rfm_counts, aes(x = RF, y = CLASS_MONETARY, fill = n)) + 
+  geom_tile() +
+  geom_text(aes(label = n)) +
+  scale_fill_distiller(direction=1) +
+  theme_minimal()
+
+
+rfm_distrib <- as.data.frame(table(rfm$RFM))
+
+ggplot(data = rfm_distrib, aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  scale_colour_brewer() +
+  labs(title = "RFM Classes Distribution", x = "RFM Classes", y = "# Customers") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  guides(fill = FALSE)
