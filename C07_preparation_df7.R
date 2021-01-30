@@ -291,7 +291,7 @@ df7_dist_customers_purchases <- df_7_tic_clean_final %>%
 
 df7_dist_customers_purchases
 
-ggplot(data = df7_dist_customers_purchases, aes(x= NUM_PURCHASES)) +
+ggplot(data = df7_dist_customers_purchases %>% filter(NUM_PURCHASES <= 50), aes(x= NUM_PURCHASES)) +
   geom_histogram(binwidth=1) +
   theme_minimal()
 
@@ -321,6 +321,40 @@ ggplot(lag_date_purchases, aes(x = as.numeric(as.character(Var1)), y = cumsum(Pe
   theme(plot.title = element_text(hjust = 0.5)) +
   geom_vline(xintercept = 60, linetype = "dotted") +
   geom_line(size = 1)
+
+
+
+dist_scontrini <- df_7_tic_clean_final %>%
+  filter(DIREZIONE == 1) %>%
+  group_by(Mese = paste(year(TIC_DATETIME), month(TIC_DATETIME), sep="-")) %>%
+  summarise(n = n_distinct(ID_SCONTRINO))
+
+d2 <- as.data.frame(rbind(
+  cbind("2018-5", 63601),
+  cbind("2018-6", 65651),
+  cbind("2018-7", 69052),
+  cbind("2018-8", 70829),
+  cbind("2018-9", 73766),
+  cbind("2018-10", 79970),
+  cbind("2018-11", 92383),
+  cbind("2018-12", 82476),
+  cbind("2019-1", 73830),
+  cbind("2019-2", 72410),
+  cbind("2019-3", 89348),
+  cbind("2019-4", 74530)
+))
+
+d2$V1 <- factor(d2$V1, levels = d2$V1)
+
+ggplot(data=d2, aes(x=V1, y=V2)) +
+  geom_bar(stat="identity") +
+  labs(title = "Distribuzione Scontrini per Mese", x = "Mese", y = "# Scontrini") +
+  theme_minimal()
+
+
+# count scontrini
+n_distinct((df_7_tic_clean_final %>%
+  filter(DIREZIONE == 1))$ID_CLI)
 
 
 #### FINAL REVIEW df_7_clean ####

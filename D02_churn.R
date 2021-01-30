@@ -50,10 +50,15 @@ for (i in c(1:nrow(churn))){
 
 churn$CHURN <- as.factor(churn$CHURN)
 
+ggplot(data = churn, aes(x = CHURN)) +
+  geom_bar() +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
 
 # join con i dati delle carte fedeltà
 churn <- left_join(churn, df_1_cli_fid_clean[, c("ID_CLI", "LAST_COD_FID")], by = "ID_CLI")
-
+churn <- left_join(churn, df_2_cli_account_clean[, c("ID_CLI", "TYP_JOB")], by = "ID_CLI")
 
 # Machine Learning model
 
@@ -65,7 +70,7 @@ test <- churn[-train_index,]
 
 
 # Decision Tree
-tree <- rpart(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+tree <- rpart(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID + TYP_JOB,
               data = train)
 summary(tree)
 
@@ -79,7 +84,7 @@ F1_Score(p1, test$CHURN, positive = "1")
 
 
 # Random Forest
-tree_rf <- randomForest(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+tree_rf <- randomForest(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID + TYP_JOB,
                         data = train, ntree = 100)
 print(tree_rf)
 
@@ -92,7 +97,7 @@ F1_Score(tree_rf_pred, test$CHURN, positive = "1")
 
 
 # Logistic Regression
-logistic <- train(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+logistic <- train(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID + TYP_JOB,
                   data = train,
                   method = "glm")
 summary(logistic)
@@ -105,7 +110,7 @@ precision(logistic_pred, test$CHURN, relevant="1")
 F1_Score(logistic_pred, test$CHURN, positive="1")
 
 # Support Vector Machine
-svmfit <- svm(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+svmfit <- svm(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID + TYP_JOB,
              data = train,
              kernel = "linear")
 print(svmfit)
@@ -119,7 +124,7 @@ F1_Score(svm_pred, test$CHURN, positive="1")
 
 
 # Naïve Bayes
-nbfit <- naiveBayes(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID,
+nbfit <- naiveBayes(CHURN ~ RECENCY + IMPORTO_LORDO + COUNT_ACQUISTI + LAST_COD_FID + TYP_JOB,
                     data = train)
 nbfit
 
@@ -143,6 +148,8 @@ scores <- as.data.frame(cbind(c("Decision Tree", "Random Forest", "Logistic Regr
 
 colnames(scores) <- c("Model", "Recall", "Precision", "F1_Score")
 
+scores
+
 ggplot(data = scores, aes(x = Model, y = F1_Score)) +
   geom_bar(stat = "identity") +
   coord_cartesian(ylim = c(0.7, 0.8)) +
@@ -152,7 +159,7 @@ ggplot(data = scores, aes(x = Model, y = F1_Score)) +
 
 ggplot(data = scores, aes(x = Model, y = Precision)) +
   geom_bar(stat = "identity") +
-  coord_cartesian(ylim = c(0.6, 0.8)) +
+    coord_cartesian(ylim = c(0.6, 0.8)) +
   theme_minimal() +
   guides(fill = FALSE) +
   theme(plot.title = element_text(hjust = 0.5))
